@@ -21,6 +21,7 @@ type etcdReg struct {
 	client  *clientv3.Client
 	options *registry.Options
 
+	wg        sync.WaitGroup
 	closeCh   chan struct{}
 	closeOnce sync.Once
 	uid       string
@@ -60,6 +61,9 @@ func (r *etcdReg) Register(ops ...registry.Option) {
 	}
 
 	go func() {
+		r.wg.Add(1)
+		defer r.wg.Done()
+
 		var err error
 		err = r.register() // 先注册一次
 		ticker := time.NewTicker(r.options.RegisterInterval)
@@ -119,6 +123,7 @@ func (r *etcdReg) Close() {
 	r.closeOnce.Do(func() {
 		close(r.closeCh)
 	})
+	r.wg.Wait()
 }
 
 func (r *etcdReg) getKey() string {
@@ -133,5 +138,4 @@ func (r *etcdReg) unregister() {
 	}
 	_, _ = r.client.Revoke(context.Background(), r.leaseId) // 回收租约
 	log.Printf("unregister uid:%s, options:%v", r.uid, r.options)
-	//_ = r.client.Close()
 }
