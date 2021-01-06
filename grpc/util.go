@@ -14,7 +14,6 @@ func UpdateAddress(inss []registry.Instance, conn resolver.ClientConn) {
 	conn.UpdateState(resolver.State{
 		Addresses: address,
 	})
-	grpc.Dial()
 }
 
 type NoopResolver struct{}
