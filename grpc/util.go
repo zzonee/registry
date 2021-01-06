@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"github.com/zzonee/registry"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/resolver"
 )
 
