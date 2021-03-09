@@ -7,6 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"log"
 	"strings"
 	"sync"
 )
@@ -69,7 +70,12 @@ func (d *k8sDiscovery) watch(ch chan<- []registry.Instance, service, port string
 			select {
 			case <-d.closeCh:
 				return
-			case <-watcher.ResultChan():
+			case e, ok := <-watcher.ResultChan():
+				if !ok {
+					log.Printf("watcher.ResultChan() Closed, EventType:%s, service:%s, port:%s.\n", e.Type, service, port)
+					log.Println("watch again, err: ", d.watch(ch, service, port))
+					return
+				}
 			}
 
 			endpoints, err := d.clientset.CoreV1().Endpoints(d.namespace).
